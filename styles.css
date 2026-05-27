@@ -95,6 +95,15 @@ h2 {
   color: var(--cream-strong);
 }
 
+.intro-text {
+  max-width: 760px;
+  margin-top: 16px;
+  color: rgba(255, 247, 220, 0.82);
+  font-size: clamp(1rem, 2.3vw, 1.2rem);
+  font-weight: 650;
+  line-height: 1.45;
+}
+
 .class-view {
   min-height: 100%;
   display: flex;

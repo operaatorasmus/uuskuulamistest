@@ -336,7 +336,7 @@ function renderClassCards() {
     const count = document.createElement("span");
     count.textContent = classItem.tracks.length
       ? `${classItem.tracks.length} teost`
-      : "failid lisamata";
+      : "tulekul";
 
     button.append(label, count);
     button.addEventListener("click", () => selectClass(classItem));
