@@ -11,6 +11,7 @@ Encoding.default_internal = Encoding::UTF_8
 ROOT = Pathname.new(Dir.pwd)
 OUTPUT_FILE = ROOT.join("assets", "data", "tracks.js")
 AUDIO_OUTPUT_ROOT = ROOT.join("assets", "audio")
+AUDIO_WEB_MAX_BITRATE = 96_000
 AUDIO_EXTENSIONS = [".mp3", ".m4a", ".wav", ".ogg", ".flac", ".aac"].freeze
 IGNORED_DIRECTORIES = [
   ".git",
@@ -122,20 +123,62 @@ def relative_url(folder_name, file_name)
   [folder_name, file_name].map { |part| URI.encode_www_form_component(utf8(part)).gsub("+", "%20") }.join("/")
 end
 
-def web_audio_file_name(index, source_file_name)
-  "track-#{format('%02d', index + 1)}#{File.extname(source_file_name).downcase}"
+def web_audio_file_name(index)
+  "track-#{format('%02d', index + 1)}.m4a"
 end
 
-def copy_web_audio(source_path, class_id, index, source_file_name)
+def audio_info(source_path)
+  info = IO.popen(["afinfo", source_path.to_s], &:read)
+  data_format = info.match(/Data format:\s+(\d+)\s+ch,\s+(\d+)\s+Hz/)
+  bitrate = info[/bit rate:\s+(\d+)\s+bits per second/, 1]
+
+  {
+    channels: data_format ? data_format[1].to_i : 2,
+    sample_rate: data_format ? data_format[2].to_i : 44_100,
+    bitrate: bitrate ? bitrate.to_i : AUDIO_WEB_MAX_BITRATE,
+  }
+end
+
+def web_bitrate(source_bitrate, channels, sample_rate)
+  return 64_000 if channels == 1 && sample_rate <= 24_000
+
+  target = [source_bitrate, AUDIO_WEB_MAX_BITRATE].min
+  return 64_000 if target <= 72_000
+
+  96_000
+end
+
+def transcode_web_audio(source_path, class_id, index)
   output_directory = AUDIO_OUTPUT_ROOT.join(class_id)
-  output_file_name = web_audio_file_name(index, source_file_name)
+  output_file_name = web_audio_file_name(index)
   output_path = output_directory.join(output_file_name)
+  info = audio_info(source_path)
+  target_bitrate = web_bitrate(info[:bitrate], info[:channels], info[:sample_rate])
 
   FileUtils.mkdir_p(output_directory)
-  FileUtils.cp(source_path, output_path)
+  success = system(
+    "afconvert",
+    "-f",
+    "m4af",
+    "-d",
+    "aac@#{info[:sample_rate]}",
+    "-c",
+    info[:channels].to_s,
+    "-b",
+    target_bitrate.to_s,
+    source_path.to_s,
+    output_path.to_s,
+  )
+
+  unless success
+    warn "afconvert failed for #{source_path}"
+    exit 1
+  end
 
   ["assets", "audio", class_id, output_file_name].join("/")
 end
+
+FileUtils.rm_rf(AUDIO_OUTPUT_ROOT)
 
 directories = Dir.children(ROOT)
   .map { |entry| utf8(entry) }
@@ -160,7 +203,7 @@ classes = directories.map do |directory|
       {
         id: id,
         fileName: utf8(file_name),
-        src: copy_web_audio(folder_path.join(file_name), class_id(directory), index, file_name),
+        src: transcode_web_audio(folder_path.join(file_name), class_id(directory), index),
       }.merge(parse_track_title(file_name))
     end,
   }
