@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="et">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Kuulamistesti kordaja</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="assets/data/tracks.js" defer></script>
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Muusika</p>
+          <h1>Kuulamistesti kordaja</h1>
+        </div>
+        <button class="ghost-button is-hidden" id="changeClassButton" type="button">
+          Vaheta klassi
+        </button>
+      </header>
+
+      <main>
+        <section class="view class-view" id="classView" aria-labelledby="classHeading">
+          <div class="section-heading">
+            <p class="eyebrow">Klass</p>
+            <h2 id="classHeading">Vali kuulamistest</h2>
+          </div>
+          <div class="class-grid" id="classGrid"></div>
+          <p class="creator-credit">Loonud Rasmus Jan Karus, 28. lend</p>
+        </section>
+
+        <section class="view practice-view is-hidden" id="practiceView" aria-live="polite">
+          <div class="practice-grid">
+            <section class="stage-panel" aria-label="Kuulamine">
+              <div class="round-meta">
+                <span id="selectedClassLabel">10. klass</span>
+                <span id="roundLabel">Ring 1</span>
+                <span id="trackCounter">1 / 45</span>
+              </div>
+
+              <div class="timer-wrap">
+                <div class="timer-ring" id="timerRing">
+                  <div>
+                    <span id="timeLeft">1:00</span>
+                    <small>kuulata</small>
+                  </div>
+                </div>
+              </div>
+
+              <p class="status-line" id="statusLine">Valmis</p>
+
+              <div class="transport-row" aria-label="Heli juhtimine">
+                <button class="icon-button" id="playPauseButton" type="button" title="Paus">
+                  <span class="icon-play" aria-hidden="true"></span>
+                  <span class="sr-only">Paus</span>
+                </button>
+                <button class="primary-button" id="revealButton" type="button">
+                  Näita teose pealkirja
+                </button>
+              </div>
+            </section>
+
+            <aside class="answer-panel" id="answerPanel" aria-label="Vastus">
+              <p class="eyebrow">Vastus</p>
+              <div class="answer-text" id="answerText">Peidetud</div>
+              <button class="next-button" id="nextButton" type="button" disabled>
+                Järgmine teos
+              </button>
+            </aside>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
