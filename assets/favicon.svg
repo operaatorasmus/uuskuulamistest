@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Kuulamistesti kordaja">
+  <rect width="64" height="64" rx="14" fill="#ffd21f"/>
+  <path
+    d="M17 34c0-9.4 6.7-17 15-17s15 7.6 15 17"
+    fill="none"
+    stroke="#050505"
+    stroke-width="6"
+    stroke-linecap="round"
+  />
+  <rect x="11" y="32" width="12" height="18" rx="6" fill="#050505"/>
+  <rect x="41" y="32" width="12" height="18" rx="6" fill="#050505"/>
+  <path
+    d="M23 48c2.5 2.2 5.5 3.3 9 3.3s6.5-1.1 9-3.3"
+    fill="none"
+    stroke="#050505"
+    stroke-width="4"
+    stroke-linecap="round"
+  />
+</svg>

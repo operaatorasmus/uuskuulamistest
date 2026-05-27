@@ -251,9 +251,27 @@ h2 {
 
 .status-line {
   min-height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
   color: #5e4820;
   font-weight: 750;
   text-align: center;
+}
+
+.status-line.is-loading::after {
+  content: "";
+  width: 16px;
+  height: 16px;
+  border: 3px solid rgba(11, 11, 9, 0.16);
+  border-top-color: var(--yellow);
+  border-radius: 50%;
+  animation: spin 780ms linear infinite;
+}
+
+.status-line.is-error {
+  color: #8a2418;
 }
 
 .transport-row {
@@ -397,6 +415,12 @@ h2 {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 

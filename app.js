@@ -1,4 +1,5 @@
 const LISTENING_SECONDS = 60;
+const LOAD_WARNING_MS = 8000;
 const library = Array.isArray(window.LISTENING_TEST_LIBRARY)
   ? window.LISTENING_TEST_LIBRARY
   : [];
@@ -22,7 +23,7 @@ const elements = {
 };
 
 const audio = new Audio();
-audio.preload = "metadata";
+audio.preload = "auto";
 
 const state = {
   selectedClass: null,
@@ -32,8 +33,13 @@ const state = {
   currentTrack: null,
   currentStart: 0,
   revealed: false,
+  isLoading: false,
   timerId: null,
+  loadWarningTimerId: null,
+  loadToken: 0,
   metadataHandler: null,
+  errorHandler: null,
+  stalledHandler: null,
 };
 
 function shuffle(items) {
@@ -52,8 +58,11 @@ function formatTime(seconds) {
   return `${minutes}:${remainder}`;
 }
 
-function setStatus(text) {
+function setStatus(text, { loading = false, error = false } = {}) {
   elements.statusLine.textContent = text;
+  elements.statusLine.classList.toggle("is-loading", loading);
+  elements.statusLine.classList.toggle("is-error", error);
+  elements.statusLine.setAttribute("aria-busy", loading ? "true" : "false");
 }
 
 function setPlayIcon(isPlaying) {
@@ -68,6 +77,59 @@ function resetTimer() {
   state.timerId = null;
   elements.timeLeft.textContent = formatTime(LISTENING_SECONDS);
   elements.timerRing.style.setProperty("--progress", "0deg");
+}
+
+function clearPendingLoad() {
+  clearTimeout(state.loadWarningTimerId);
+  state.loadWarningTimerId = null;
+
+  if (state.metadataHandler) {
+    audio.removeEventListener("loadedmetadata", state.metadataHandler);
+    state.metadataHandler = null;
+  }
+
+  if (state.errorHandler) {
+    audio.removeEventListener("error", state.errorHandler);
+    state.errorHandler = null;
+  }
+
+  if (state.stalledHandler) {
+    audio.removeEventListener("stalled", state.stalledHandler);
+    audio.removeEventListener("waiting", state.stalledHandler);
+    state.stalledHandler = null;
+  }
+}
+
+function setLoadingControls(isLoading) {
+  state.isLoading = isLoading;
+  elements.playPauseButton.disabled = isLoading;
+  elements.revealButton.disabled = isLoading;
+
+  if (isLoading) {
+    elements.nextButton.disabled = true;
+  }
+}
+
+function showSlowLoadState(loadToken) {
+  if (loadToken !== state.loadToken || !state.isLoading) {
+    return;
+  }
+
+  setStatus("Laadimine võtab kauem", { loading: true });
+  elements.revealButton.disabled = false;
+  elements.nextButton.disabled = false;
+}
+
+function showLoadError(loadToken) {
+  if (loadToken !== state.loadToken || state.revealed) {
+    return;
+  }
+
+  clearPendingLoad();
+  setLoadingControls(false);
+  elements.nextButton.disabled = false;
+  setPlayIcon(false);
+  setStatus("Teost ei õnnestunud laadida", { error: true });
 }
 
 function updateTimer() {
@@ -126,6 +188,10 @@ function hideAnswer() {
 }
 
 async function playAudio() {
+  if (state.isLoading) {
+    return;
+  }
+
   try {
     await audio.play();
     setPlayIcon(true);
@@ -138,6 +204,9 @@ async function playAudio() {
 }
 
 function loadCurrentTrack({ autoplay = true } = {}) {
+  state.loadToken += 1;
+  const loadToken = state.loadToken;
+  clearPendingLoad();
   clearInterval(state.timerId);
   audio.pause();
   setPlayIcon(false);
@@ -148,15 +217,23 @@ function loadCurrentTrack({ autoplay = true } = {}) {
   state.currentTrack = state.queue[state.queueIndex];
   state.currentStart = 0;
   audio.src = state.currentTrack.src;
-  setStatus("Laen teost");
-
-  if (state.metadataHandler) {
-    audio.removeEventListener("loadedmetadata", state.metadataHandler);
-  }
+  setStatus("Laen teost", { loading: true });
+  setLoadingControls(true);
 
   state.metadataHandler = () => {
+    if (loadToken !== state.loadToken) {
+      return;
+    }
+
+    clearPendingLoad();
     state.currentStart = pickRandomStart(audio.duration);
-    audio.currentTime = state.currentStart;
+    try {
+      audio.currentTime = state.currentStart;
+    } catch (error) {
+      state.currentStart = 0;
+    }
+    setLoadingControls(false);
+    elements.nextButton.disabled = true;
 
     if (autoplay) {
       playAudio();
@@ -165,7 +242,17 @@ function loadCurrentTrack({ autoplay = true } = {}) {
     }
   };
 
+  state.errorHandler = () => showLoadError(loadToken);
+  state.stalledHandler = () => showSlowLoadState(loadToken);
+
   audio.addEventListener("loadedmetadata", state.metadataHandler, { once: true });
+  audio.addEventListener("error", state.errorHandler, { once: true });
+  audio.addEventListener("stalled", state.stalledHandler);
+  audio.addEventListener("waiting", state.stalledHandler);
+  state.loadWarningTimerId = setTimeout(
+    () => showSlowLoadState(loadToken),
+    LOAD_WARNING_MS
+  );
   audio.load();
 }
 
@@ -174,6 +261,9 @@ function revealAnswer(status = "Vastus avatud") {
     return;
   }
 
+  state.loadToken += 1;
+  clearPendingLoad();
+  setLoadingControls(false);
   state.revealed = true;
   clearInterval(state.timerId);
   audio.pause();
@@ -201,6 +291,9 @@ function selectClass(classItem) {
 }
 
 function showClassPicker() {
+  state.loadToken += 1;
+  clearPendingLoad();
+  setLoadingControls(false);
   clearInterval(state.timerId);
   audio.pause();
   setPlayIcon(false);
@@ -248,7 +341,7 @@ elements.nextButton.addEventListener("click", () => {
 });
 
 elements.playPauseButton.addEventListener("click", () => {
-  if (state.revealed || !state.currentTrack) {
+  if (state.revealed || state.isLoading || !state.currentTrack) {
     return;
   }
 
