@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 require "json"
+require "fileutils"
 require "pathname"
 require "uri"
 
@@ -9,6 +10,7 @@ Encoding.default_internal = Encoding::UTF_8
 
 ROOT = Pathname.new(Dir.pwd)
 OUTPUT_FILE = ROOT.join("assets", "data", "tracks.js")
+AUDIO_OUTPUT_ROOT = ROOT.join("assets", "audio")
 AUDIO_EXTENSIONS = [".mp3", ".m4a", ".wav", ".ogg", ".flac", ".aac"].freeze
 IGNORED_DIRECTORIES = [
   ".git",
@@ -120,6 +122,21 @@ def relative_url(folder_name, file_name)
   [folder_name, file_name].map { |part| URI.encode_www_form_component(utf8(part)).gsub("+", "%20") }.join("/")
 end
 
+def web_audio_file_name(index, source_file_name)
+  "track-#{format('%02d', index + 1)}#{File.extname(source_file_name).downcase}"
+end
+
+def copy_web_audio(source_path, class_id, index, source_file_name)
+  output_directory = AUDIO_OUTPUT_ROOT.join(class_id)
+  output_file_name = web_audio_file_name(index, source_file_name)
+  output_path = output_directory.join(output_file_name)
+
+  FileUtils.mkdir_p(output_directory)
+  FileUtils.cp(source_path, output_path)
+
+  ["assets", "audio", class_id, output_file_name].join("/")
+end
+
 directories = Dir.children(ROOT)
   .map { |entry| utf8(entry) }
   .select { |entry| ROOT.join(entry).directory? }
@@ -139,10 +156,11 @@ classes = directories.map do |directory|
     label: class_label(directory),
     folder: utf8(directory).strip,
     tracks: audio_files.each_with_index.map do |file_name, index|
+      id = "#{class_id(directory)}-#{format('%02d', index + 1)}"
       {
-        id: "#{class_id(directory)}-#{format('%02d', index + 1)}",
+        id: id,
         fileName: utf8(file_name),
-        src: relative_url(directory, file_name),
+        src: copy_web_audio(folder_path.join(file_name), class_id(directory), index, file_name),
       }.merge(parse_track_title(file_name))
     end,
   }
