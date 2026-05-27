@@ -20,6 +20,8 @@ const elements = {
   answerText: document.querySelector("#answerText"),
   nextButton: document.querySelector("#nextButton"),
   changeClassButton: document.querySelector("#changeClassButton"),
+  helpButton: document.querySelector("#helpButton"),
+  helpPanel: document.querySelector("#helpPanel"),
 };
 
 const audio = new Audio();
@@ -367,6 +369,12 @@ elements.playPauseButton.addEventListener("click", () => {
 });
 
 elements.changeClassButton.addEventListener("click", showClassPicker);
+
+elements.helpButton.addEventListener("click", () => {
+  const isOpen = !elements.helpPanel.classList.contains("is-hidden");
+  elements.helpPanel.classList.toggle("is-hidden", isOpen);
+  elements.helpButton.setAttribute("aria-expanded", String(!isOpen));
+});
 
 audio.addEventListener("ended", () => {
   setPlayIcon(false);

@@ -107,10 +107,67 @@ h2 {
   gap: 14px;
 }
 
-.creator-credit {
+.class-footer {
   margin-top: auto;
   padding-top: clamp(32px, 8vh, 90px);
-  align-self: flex-end;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.help-area {
+  max-width: min(100%, 360px);
+}
+
+.help-button {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid rgba(255, 247, 220, 0.38);
+  border-radius: 8px;
+  background: var(--yellow);
+  color: var(--ink);
+  cursor: pointer;
+  font-weight: 850;
+  transition:
+    transform 160ms ease,
+    background 160ms ease;
+}
+
+.help-button:hover {
+  transform: translateY(-2px);
+  background: #ffe06b;
+}
+
+.contact-panel {
+  margin-top: 10px;
+  padding: 14px;
+  border: 1px solid rgba(255, 247, 220, 0.34);
+  border-radius: 8px;
+  background: var(--cream);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+}
+
+.contact-panel p {
+  margin-bottom: 10px;
+  color: #302817;
+  font-weight: 750;
+  line-height: 1.35;
+}
+
+.contact-panel a {
+  display: block;
+  color: var(--ink);
+  font-weight: 850;
+  overflow-wrap: anywhere;
+}
+
+.contact-panel a + a {
+  margin-top: 6px;
+}
+
+.creator-credit {
   color: rgba(255, 247, 220, 0.8);
   font-size: 0.9rem;
   font-weight: 750;
@@ -439,6 +496,11 @@ h2 {
   .class-grid,
   .practice-grid {
     grid-template-columns: 1fr;
+  }
+
+  .class-footer {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .class-card {

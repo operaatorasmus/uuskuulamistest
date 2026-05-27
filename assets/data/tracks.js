@@ -389,13 +389,5 @@ window.LISTENING_TEST_LIBRARY = [
     "tracks": [
 
     ]
-  },
-  {
-    "id": "tmp",
-    "label": "tmp",
-    "folder": "tmp",
-    "tracks": [
-
-    ]
   }
 ];

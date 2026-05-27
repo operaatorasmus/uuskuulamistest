@@ -20,6 +20,7 @@ IGNORED_DIRECTORIES = [
   "node_modules",
   "dist",
   "build",
+  "tmp",
 ].freeze
 
 KNOWN_COMPOSERS = [
