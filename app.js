@@ -256,19 +256,28 @@ function loadCurrentTrack({ autoplay = true } = {}) {
   audio.load();
 }
 
-function revealAnswer(status = "Vastus avatud") {
+function revealAnswer(status = "Vastus avatud", { keepPlaying = false } = {}) {
   if (!state.currentTrack) {
     return;
   }
+
+  const shouldKeepPlaying = keepPlaying && !audio.ended && !audio.paused;
 
   state.loadToken += 1;
   clearPendingLoad();
   setLoadingControls(false);
   state.revealed = true;
   clearInterval(state.timerId);
-  audio.pause();
-  setPlayIcon(false);
+
+  if (shouldKeepPlaying) {
+    setPlayIcon(true);
+  } else {
+    audio.pause();
+    setPlayIcon(false);
+  }
+
   elements.revealButton.disabled = true;
+  elements.playPauseButton.disabled = true;
   elements.nextButton.disabled = false;
   elements.answerPanel.classList.add("is-revealed");
   elements.answerText.textContent = state.currentTrack.answer;
@@ -333,7 +342,9 @@ function renderClassCards() {
   });
 }
 
-elements.revealButton.addEventListener("click", () => revealAnswer("Vastus avatud"));
+elements.revealButton.addEventListener("click", () => {
+  revealAnswer("Vastus avatud", { keepPlaying: true });
+});
 
 elements.nextButton.addEventListener("click", () => {
   advanceQueue();
@@ -358,6 +369,8 @@ elements.playPauseButton.addEventListener("click", () => {
 elements.changeClassButton.addEventListener("click", showClassPicker);
 
 audio.addEventListener("ended", () => {
+  setPlayIcon(false);
+
   if (!state.revealed) {
     revealAnswer("Teos lõppes");
   }
