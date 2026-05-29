@@ -7,7 +7,7 @@ kausta `assets/audio/`. Manifest viitab nendele lühikestele ASCII failiteedele,
 et täpitähed, tühikud, pikad failinimed ja suured MP3 failid veebis laadimist
 katki ei teeks.
 
-Kui lisad hiljem 9., 11. või 12. klassi kaustadesse uued helifailid, käivita enne lehe kasutamist:
+Kui lisad hiljem 9. klassi kausta uued helifailid, käivita enne lehe kasutamist:
 
 ```sh
 ruby scripts/generate-manifest.rb
